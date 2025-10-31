@@ -1,4 +1,5 @@
 // src/lib/cart.ts
+
 export function getCart() {
   if (typeof window === "undefined") return { items: [] };
   const cart = localStorage.getItem("cart");
@@ -25,6 +26,16 @@ export function addToCart(item: any) {
 export function removeFromCart(id: string) {
   const cart = getCart();
   cart.items = cart.items.filter((i: any) => i.id !== id);
+  saveCart(cart);
+}
+
+// ✅ AICI adăugăm funcția care lipsea:
+export function updateQuantity(id: string, quantity: number) {
+  const cart = getCart();
+  const item = cart.items.find((i: any) => i.id === id);
+  if (item) {
+    item.quantity = quantity;
+  }
   saveCart(cart);
 }
 
