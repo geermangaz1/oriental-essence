@@ -16,7 +16,6 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
     phone: "",
     address: "",
     notes: "",
@@ -40,58 +39,42 @@ const Checkout = () => {
         .substr(2, 9)
         .toUpperCase()}`;
 
-      // 1️⃣ — Salvăm comanda în Supabase
-      const { data, error } = await supabase
-        .from("orders")
-        .insert([
-          {
-            order_number: orderNumber,
-            customer_name: formData.name,
-            customer_email: formData.email,
-            customer_phone: formData.phone,
-            address: formData.address,
-            items: cart.items as any,
-            total: cart.total,
-            notes: formData.notes || null,
-            status: "în procesare",
-          },
-        ])
-        .select()
-        .single();
+      // ✅ Salvăm comanda în Supabase
+      const { error } = await supabase.from("orders").insert([
+        {
+          order_number: orderNumber,
+          customer_name: formData.name,
+          customer_phone: formData.phone,
+          address: formData.address,
+          items: cart.items as any,
+          total: cart.total,
+          notes: formData.notes || null,
+          status: "în procesare",
+        },
+      ]);
 
       if (error) throw error;
 
-      // 2️⃣ — Trimitem notificare la Formspree (merge direct fără CORS)
-      const formspreeId = "xgvplgzr"; // ← ID-ul tău Formspree
-      await fetch(`https://formspree.io/f/${formspreeId}`, {
+      // ✅ Trimitem doar backup către Formspree (fără email)
+      await fetch("https://formspree.io/f/xgvplgzr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           subject: `Comandă nouă #${orderNumber}`,
           name: formData.name,
-          email: formData.email,
           phone: formData.phone,
           address: formData.address,
           notes: formData.notes || "Fără notițe",
-          items: cart.items
-            .map(
-              (item) =>
-                `${item.name} x${item.quantity} - ${(
-                  item.price * item.quantity
-                ).toFixed(2)} RON`
-            )
-            .join("\n"),
           total: `${cart.total.toFixed(2)} RON`,
         }),
       });
 
-      // 3️⃣ — Golim coșul și redirecționăm
       clearCart();
       window.dispatchEvent(new Event("cartUpdated"));
       navigate(`/order-confirmation/${orderNumber}`);
-      toast.success("Comandă plasată cu succes!");
+      toast.success("Comanda ta a fost trimisă cu succes!");
     } catch (error) {
-      console.error("Error creating order:", error);
+      console.error("Eroare la trimiterea comenzii:", error);
       toast.error("A apărut o eroare. Încearcă din nou mai târziu.");
     } finally {
       setLoading(false);
@@ -99,22 +82,29 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#f8f5f0] text-[#3a2b16]">
       <Navbar />
 
-      <section className="py-12 flex-1">
-        <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold mb-8">Finalizează Comanda</h1>
+      <section className="py-16 flex-1">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold mb-3 text-[#6b4b1e]">
+              Finalizează Comanda
+            </h1>
+            <p className="text-lg text-[#4e3a1e]/80">
+              Te rugăm să completezi detaliile tale pentru a trimite comanda.
+              Produsele tale vor fi pregătite cu grijă 💛
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* 🧾 Formularul */}
-            <div className="lg:col-span-2">
-              <form
-                onSubmit={handleSubmit}
-                className="bg-card border border-border rounded-lg p-6 space-y-6"
-              >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* FORMULAR */}
+            <div className="lg:col-span-2 bg-white/90 border border-[#e7dcc7] shadow-lg rounded-2xl p-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <Label htmlFor="name">Nume Complet *</Label>
+                  <Label htmlFor="name" className="text-[#4e3a1e] font-medium">
+                    Nume complet *
+                  </Label>
                   <Input
                     id="name"
                     required
@@ -122,26 +112,15 @@ const Checkout = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="Ion Popescu"
+                    placeholder="Ex: Andrei Popescu"
+                    className="border-[#d1bfa3] focus:ring-[#b08a4f]"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="ion.popescu@email.com"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone">Telefon *</Label>
+                  <Label htmlFor="phone" className="text-[#4e3a1e] font-medium">
+                    Telefon *
+                  </Label>
                   <Input
                     id="phone"
                     type="tel"
@@ -150,12 +129,15 @@ const Checkout = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, phone: e.target.value })
                     }
-                    placeholder="0712345678"
+                    placeholder="Ex: 0712345678"
+                    className="border-[#d1bfa3] focus:ring-[#b08a4f]"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Adresă Completă *</Label>
+                  <Label htmlFor="address" className="text-[#4e3a1e] font-medium">
+                    Adresă completă *
+                  </Label>
                   <Textarea
                     id="address"
                     required
@@ -163,70 +145,82 @@ const Checkout = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, address: e.target.value })
                     }
-                    placeholder="Strada, Oraș, Județ, Cod Poștal"
-                    rows={4}
+                    placeholder="Strada, oraș, județ, cod poștal"
+                    rows={3}
+                    className="border-[#d1bfa3] focus:ring-[#b08a4f]"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="notes">Notițe (opțional)</Label>
+                  <Label htmlFor="notes" className="text-[#4e3a1e] font-medium">
+                    Observații (opțional)
+                  </Label>
                   <Textarea
                     id="notes"
                     value={formData.notes}
                     onChange={(e) =>
                       setFormData({ ...formData, notes: e.target.value })
                     }
-                    placeholder="Instrucțiuni speciale..."
+                    placeholder="Instrucțiuni speciale pentru livrare..."
                     rows={3}
+                    className="border-[#d1bfa3] focus:ring-[#b08a4f]"
                   />
                 </div>
 
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full btn-gold"
+                  className="w-full bg-[#c4a265] hover:bg-[#b08a4f] text-white font-semibold rounded-xl shadow-md transition-all duration-300"
                   disabled={loading}
                 >
-                  {loading ? "Se procesează..." : "Plasează Comanda"}
+                  {loading ? "Se procesează..." : "Trimite Comanda"}
                 </Button>
               </form>
             </div>
 
-            {/* 🛒 Rezumat comandă */}
-            <div className="lg:col-span-1">
-              <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
-                <h2 className="text-2xl font-bold mb-6">Produse Comandate</h2>
-                <div className="space-y-4 mb-6">
-                  {cart.items.map((item) => (
-                    <div key={item.id} className="flex gap-4">
-                      <img
-                        src={item.image_url || "/placeholder.svg"}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="font-semibold text-sm">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {item.quantity} x {item.price} RON
-                        </p>
-                      </div>
-                      <p className="font-semibold">
-                        {(item.price * item.quantity).toFixed(2)} RON
+            {/* SUMAR COMANDĂ */}
+            <div className="bg-white/90 border border-[#e7dcc7] shadow-md rounded-2xl p-8">
+              <h2 className="text-2xl font-semibold mb-6 text-[#6b4b1e]">
+                Produsele tale
+              </h2>
+              <div className="space-y-4 mb-6">
+                {cart.items.map((item) => (
+                  <div key={item.id} className="flex gap-4 items-center">
+                    <img
+                      src={item.image_url || "/placeholder.svg"}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-md border border-[#e6d9c2]"
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-[#3a2b16] text-sm">
+                        {item.name}
+                      </p>
+                      <p className="text-sm text-[#5a4630]/70">
+                        {item.quantity} × {item.price} RON
                       </p>
                     </div>
-                  ))}
-                </div>
-                <div className="border-t border-border pt-4">
-                  <div className="flex justify-between text-lg mb-2">
-                    <span className="font-bold">Total</span>
-                    <span className="font-bold text-primary">
-                      {cart.total.toFixed(2)} RON
-                    </span>
+                    <p className="font-semibold text-[#6b4b1e]">
+                      {(item.price * item.quantity).toFixed(2)} RON
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Livrare GRATUITĂ — 24–48h (5–7 zile în zone rurale)
-                  </p>
+                ))}
+              </div>
+
+              <div className="border-t border-[#e7dcc7] pt-4">
+                <div className="flex justify-between text-lg mb-2">
+                  <span className="font-bold">Total</span>
+                  <span className="font-bold text-[#b08a4f]">
+                    {cart.total.toFixed(2)} RON
+                  </span>
                 </div>
+                <p className="text-sm text-[#5a4630]/70">
+                  Livrare gratuită — 24–48h (5–7 zile în zone rurale)
+                </p>
+              </div>
+
+              <div className="mt-6 text-sm text-[#4e3a1e]/70 italic">
+                ✨ Mulțumim pentru încrederea acordată! Fiecare produs este
+                ambalat cu grijă și parfum oriental autentic.
               </div>
             </div>
           </div>
