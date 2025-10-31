@@ -22,11 +22,6 @@ const Checkout = () => {
     notes: "",
   });
 
-  // 👇 Face scroll sus mereu când intri pe pagina de checkout
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   useEffect(() => {
     const currentCart = getCart();
     if (currentCart.items.length === 0) {
@@ -66,8 +61,8 @@ const Checkout = () => {
 
       if (error) throw error;
 
-      // 2️⃣ — Trimitem notificare backup
-      const formspreeId = "xgvplgzr";
+      // 2️⃣ — Trimitem notificare la Formspree (merge direct fără CORS)
+      const formspreeId = "xgvplgzr"; // ← ID-ul tău Formspree
       await fetch(`https://formspree.io/f/${formspreeId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -90,78 +85,11 @@ const Checkout = () => {
         }),
       });
 
-      // 3️⃣ — Trimitem email către CLIENT
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Oriental Essence <onboarding@resend.dev>",
-          to: formData.email,
-          subject: `Mulțumim pentru comanda ta, ${formData.name}!`,
-          html: `
-            <div style="font-family: Arial; padding: 20px; background-color: #fff8ef; border-radius: 8px;">
-              <h2 style="color:#b68b00;">Mulțumim pentru comanda ta!</h2>
-              <p>Bună, ${formData.name},</p>
-              <p>Comanda ta #${orderNumber} a fost primită și este în procesare.</p>
-              <p><b>Total:</b> ${cart.total.toFixed(2)} RON</p>
-              <p><b>Adresă livrare:</b> ${formData.address}</p>
-              <p>Livrarea se face în 24–48h (5–7 zile lucrătoare în zonele rurale).</p>
-              <br/>
-              <p>Cu drag,</p>
-              <p><b>Echipa Oriental Essence</b></p>
-            </div>
-          `,
-        }),
-      });
-
-      // 4️⃣ — Email către ADMIN
-      await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Oriental Essence <onboarding@resend.dev>",
-          to: "adriantutui2003@gmail.com",
-          subject: `Comandă nouă #${orderNumber}`,
-          html: `
-            <div style="font-family: Arial; padding: 20px;">
-              <h3>Comandă nouă de la ${formData.name}</h3>
-              <p><b>Email:</b> ${formData.email}</p>
-              <p><b>Telefon:</b> ${formData.phone}</p>
-              <p><b>Adresă:</b> ${formData.address}</p>
-              <p><b>Notițe:</b> ${formData.notes || "—"}</p>
-              <hr/>
-              <h4>Produse comandate:</h4>
-              <ul>
-                ${cart.items
-                  .map(
-                    (item) =>
-                      `<li>${item.name} × ${item.quantity} — ${(
-                        item.price * item.quantity
-                      ).toFixed(2)} RON</li>`
-                  )
-                  .join("")}
-              </ul>
-              <p><b>Total:</b> ${cart.total.toFixed(2)} RON</p>
-            </div>
-          `,
-        }),
-      });
-
+      // 3️⃣ — Golim coșul și redirecționăm
       clearCart();
       window.dispatchEvent(new Event("cartUpdated"));
+      navigate(`/order-confirmation/${orderNumber}`);
       toast.success("Comandă plasată cu succes!");
-
-      // 👇 Așteptăm 1 secundă ca toastul să fie vizibil
-      setTimeout(() => {
-        navigate(`/order-confirmation/${orderNumber}`);
-        window.scrollTo(0, 0);
-      }, 1000);
     } catch (error) {
       console.error("Error creating order:", error);
       toast.error("A apărut o eroare. Încearcă din nou mai târziu.");
@@ -179,6 +107,7 @@ const Checkout = () => {
           <h1 className="text-4xl font-bold mb-8">Finalizează Comanda</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* 🧾 Formularul */}
             <div className="lg:col-span-2">
               <form
                 onSubmit={handleSubmit}
@@ -263,7 +192,7 @@ const Checkout = () => {
               </form>
             </div>
 
-            {/* 🛍️ Sidebar cu produse comandate */}
+            {/* 🛒 Rezumat comandă */}
             <div className="lg:col-span-1">
               <div className="bg-card border border-border rounded-lg p-6 sticky top-24">
                 <h2 className="text-2xl font-bold mb-6">Produse Comandate</h2>
@@ -278,7 +207,7 @@ const Checkout = () => {
                       <div className="flex-1">
                         <p className="font-semibold text-sm">{item.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {item.quantity} × {item.price} RON
+                          {item.quantity} x {item.price} RON
                         </p>
                       </div>
                       <p className="font-semibold">
@@ -287,7 +216,6 @@ const Checkout = () => {
                     </div>
                   ))}
                 </div>
-
                 <div className="border-t border-border pt-4">
                   <div className="flex justify-between text-lg mb-2">
                     <span className="font-bold">Total</span>
@@ -296,10 +224,7 @@ const Checkout = () => {
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Livrare GRATUITĂ
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 italic">
-                    Livrare în 24–48h, 5–7 zile lucrătoare în zonele rurale
+                    Livrare GRATUITĂ — 24–48h (5–7 zile în zone rurale)
                   </p>
                 </div>
               </div>
