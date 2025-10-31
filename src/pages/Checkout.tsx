@@ -39,7 +39,7 @@ const Checkout = () => {
         .substr(2, 9)
         .toUpperCase()}`;
 
-      // ✅ Salvăm comanda în Supabase
+      // Salvăm comanda în Supabase
       const { error } = await supabase.from("orders").insert([
         {
           order_number: orderNumber,
@@ -54,20 +54,6 @@ const Checkout = () => {
       ]);
 
       if (error) throw error;
-
-      // ✅ Trimitem doar backup către Formspree (fără email)
-      await fetch("https://formspree.io/f/xgvplgzr", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: `Comandă nouă #${orderNumber}`,
-          name: formData.name,
-          phone: formData.phone,
-          address: formData.address,
-          notes: formData.notes || "Fără notițe",
-          total: `${cart.total.toFixed(2)} RON`,
-        }),
-      });
 
       clearCart();
       window.dispatchEvent(new Event("cartUpdated"));
@@ -92,8 +78,8 @@ const Checkout = () => {
               Finalizează Comanda
             </h1>
             <p className="text-lg text-[#4e3a1e]/80">
-              Te rugăm să completezi detaliile tale pentru a trimite comanda.
-              Produsele tale vor fi pregătite cu grijă 💛
+              Completează detaliile tale pentru a trimite comanda. Produsele tale
+              vor fi pregătite cu grijă 💛
             </p>
           </div>
 
@@ -186,11 +172,13 @@ const Checkout = () => {
               <div className="space-y-4 mb-6">
                 {cart.items.map((item) => (
                   <div key={item.id} className="flex gap-4 items-center">
-                    <img
-                      src={item.image_url || "/placeholder.svg"}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-md border border-[#e6d9c2]"
-                    />
+                    <div className="w-16 h-16 flex items-center justify-center bg-[#f9f5ee] rounded-md border border-[#e6d9c2] overflow-hidden">
+                      <img
+                        src={item.image_url || "/placeholder.svg"}
+                        alt={item.name}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                     <div className="flex-1">
                       <p className="font-medium text-[#3a2b16] text-sm">
                         {item.name}
@@ -214,7 +202,7 @@ const Checkout = () => {
                   </span>
                 </div>
                 <p className="text-sm text-[#5a4630]/70">
-                  Livrare gratuită — 24–48h (5–7 zile în zone rurale)
+                  Livrare estimată: 5–7 zile lucrătoare
                 </p>
               </div>
 
