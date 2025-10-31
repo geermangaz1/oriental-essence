@@ -1,92 +1,101 @@
-import { useEffect, useState } from "react";
-import { getCart, clearCart } from "@/lib/cart";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { getCart, clearCart } from "@/lib/cart";
 
-interface CartItem {
-  id: string;
-  name: string;
-  image: string;
-  price: number;
-  quantity: number;
-}
+export default function CheckoutPage() {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    message: "",
+  });
+  const navigate = useNavigate();
+  const cart = getCart();
 
-export default function Checkout() {
-  const [cart, setCart] = useState<{ items: CartItem[] }>({ items: [] });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderPlaced, setOrderPlaced] = useState(false);
-
-  useEffect(() => {
-    const c = getCart();
-    if (!c.items) c.items = [];
-    setCart(c);
-  }, []);
-
-  const handleCheckout = () => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      clearCart();
-      setIsSubmitting(false);
-      setOrderPlaced(true);
-    }, 1000);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  if (orderPlaced) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="flex-1 flex flex-col items-center justify-center text-center p-8">
-          <h1 className="text-3xl font-semibold mb-4">Mulțumim pentru comandă!</h1>
-          <p>Comanda ta va fi livrată în 5–7 zile lucrătoare.</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  const total = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("📦 Comandă trimisă:", { form, cart });
+    alert("Comanda ta a fost trimisă cu succes!");
+    clearCart();
+    navigate("/");
+  };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen flex flex-col bg-[#fdfbf8]">
       <Navbar />
-      <main className="flex-1 max-w-3xl mx-auto p-6">
-        <h1 className="text-3xl font-semibold mb-6 text-center">Finalizare comandă</h1>
+      <main className="flex-1 py-12">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <h1 className="text-4xl font-bold mb-8 text-center">Finalizează Comanda</h1>
 
-        {cart.items.length === 0 ? (
-          <p className="text-center text-gray-500">Coșul tău este gol.</p>
-        ) : (
-          <div className="space-y-4">
-            {cart.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between border-b pb-4"
-              >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-24 h-24 object-contain rounded-md"
-                />
-                <div className="flex-1 ml-4">
-                  <h2 className="font-medium">{item.name}</h2>
-                  <p className="text-sm text-gray-600">Cantitate: {item.quantity}</p>
-                </div>
-                <div className="text-right font-semibold">
-                  {(item.price * item.quantity).toFixed(2)} RON
-                </div>
-              </div>
-            ))}
-            <div className="text-right font-semibold text-lg mt-4">
-              Total: {total.toFixed(2)} RON
+          <form onSubmit={handleSubmit} className="space-y-4 bg-white p-8 rounded-xl border shadow-sm">
+            <div>
+              <label className="block font-medium mb-1">Nume complet</label>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                className="w-full border rounded-lg px-3 py-2"
+              />
             </div>
-            <button
-              onClick={handleCheckout}
-              disabled={isSubmitting}
-              className="w-full mt-6 bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
-            >
-              {isSubmitting ? "Se procesează comanda..." : "Plasează comanda"}
-            </button>
-          </div>
-        )}
+
+            <div>
+              <label className="block font-medium mb-1">Email</label>
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Telefon</label>
+              <input
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                required
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Adresă de livrare</label>
+              <textarea
+                name="address"
+                value={form.address}
+                onChange={handleChange}
+                required
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+
+            <div>
+              <label className="block font-medium mb-1">Mesaj (opțional)</label>
+              <textarea
+                name="message"
+                value={form.message}
+                onChange={handleChange}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+
+            <Button type="submit" size="lg" className="w-full btn-gold">
+              Trimite Comanda
+            </Button>
+          </form>
+        </div>
       </main>
       <Footer />
     </div>
