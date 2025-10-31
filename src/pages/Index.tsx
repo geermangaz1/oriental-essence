@@ -19,14 +19,10 @@ const Index = () => {
         .eq("featured", true)
         .limit(3);
 
-      if (error) {
-        console.error("Error fetching featured products:", error);
-      } else {
-        setFeaturedProducts(data || []);
-      }
+      if (error) console.error("Error fetching featured products:", error);
+      else setFeaturedProducts(data || []);
       setLoading(false);
     };
-
     fetchFeaturedProducts();
   }, []);
 
@@ -34,7 +30,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-[#faf7f2] text-neutral-800">
       <Navbar />
 
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="relative py-14 md:py-24 overflow-hidden bg-gradient-to-br from-[#e9d8a6] via-[#d4a373] to-[#b07d62]">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1615634260167-c8cdede054de?w=1600')] bg-cover bg-center opacity-20"></div>
         <div className="container mx-auto px-4 relative z-10">
@@ -61,43 +57,7 @@ const Index = () => {
         <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#faf7f2] to-transparent"></div>
       </section>
 
-      {/* FEATURES SECTION */}
-      <section className="py-16 bg-[#f0e7db]">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
-            {[
-              {
-                icon: <Sparkles className="h-8 w-8 text-[#b07d62]" />,
-                title: "Calitate Premium",
-                text: "Parfumuri selectate din cele mai rafinate case de parfumuri orientale",
-              },
-              {
-                icon: <Award className="h-8 w-8 text-[#b07d62]" />,
-                title: "Autenticitate",
-                text: "100% produse originale, cu certificate de autenticitate",
-              },
-              {
-                icon: <Shield className="h-8 w-8 text-[#b07d62]" />,
-                title: "Livrare Sigură",
-                text: "Plată ramburs și ambalare premium pentru fiecare comandă",
-              },
-            ].map((feature, i) => (
-              <div
-                key={i}
-                className="text-center p-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg w-full sm:w-[260px] hover:shadow-xl transition-all duration-300"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#d4a373]/20 mb-4">
-                  {feature.icon}
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-neutral-600 text-sm">{feature.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURED PRODUCTS */}
+      {/* FEATURED PRODUCTS — mutată mai sus */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -133,7 +93,43 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA SECTION */}
+      {/* FEATURES — acum e sub produse */}
+      <section className="py-16 bg-[#f0e7db]">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+            {[
+              {
+                icon: <Sparkles className="h-8 w-8 text-[#b07d62]" />,
+                title: "Calitate Premium",
+                text: "Parfumuri selectate din cele mai rafinate case de parfumuri orientale",
+              },
+              {
+                icon: <Award className="h-8 w-8 text-[#b07d62]" />,
+                title: "Autenticitate",
+                text: "100% produse originale, cu certificate de autenticitate",
+              },
+              {
+                icon: <Shield className="h-8 w-8 text-[#b07d62]" />,
+                title: "Livrare Sigură",
+                text: "Plată ramburs și ambalare premium pentru fiecare comandă",
+              },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className="text-center p-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg w-full sm:w-[260px] hover:shadow-xl transition-all duration-300"
+              >
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#d4a373]/20 mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-neutral-600 text-sm">{feature.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
       <section className="py-20 bg-gradient-to-r from-[#d4a373] to-[#b07d62] text-center text-white">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
