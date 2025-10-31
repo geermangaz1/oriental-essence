@@ -1,60 +1,38 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
-import Index from "./pages/Index";
-import Catalog from "./pages/Catalog";
-import Product from "./pages/Product";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import OrderConfirmation from "./pages/OrderConfirmation";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/NotFound";
-
-// pagini admin
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminOrders from "./pages/admin/AdminOrders";
-
-const queryClient = new QueryClient();
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "@/pages/Home"; // dacă ai pagină de start
+import Catalog from "@/pages/Catalog"; // lista de produse
+import About from "@/pages/About"; // pagina despre
+import Contact from "@/pages/Contact"; // contact
+import Cart from "@/pages/Cart"; // coșul de cumpărături
+import CheckoutPage from "@/pages/CheckoutPage"; // checkout / finalizare comandă
+import NotFound from "@/pages/NotFound"; // opțional
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Pagini publice */}
-            <Route path="/" element={<Index />} />
-            <Route path="/catalog" element={<Catalog />} />
-            <Route path="/product/:id" element={<Product />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route
-              path="/order-confirmation/:orderNumber"
-              element={<OrderConfirmation />}
-            />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+    <Router>
+      <Routes>
+        {/* 🔸 Pagina principală */}
+        <Route path="/" element={<Home />} />
 
-            {/* Pagini admin */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/admin/orders" element={<AdminOrders />} />
+        {/* 🔸 Pagina catalogului de produse */}
+        <Route path="/catalog" element={<Catalog />} />
 
-            {/* Pagina 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
+        {/* 🔸 Pagina despre brand */}
+        <Route path="/despre" element={<About />} />
+
+        {/* 🔸 Pagina de contact */}
+        <Route path="/contact" element={<Contact />} />
+
+        {/* 🔸 Coșul de cumpărături */}
+        <Route path="/cart" element={<Cart />} />
+
+        {/* 🔸 Finalizare comandă */}
+        <Route path="/checkout" element={<CheckoutPage />} />
+
+        {/* 🔸 Pagina pentru 404 / route-uri inexistente */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   );
 }
 
