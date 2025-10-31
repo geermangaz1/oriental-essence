@@ -1,135 +1,94 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useCart } from "@/contexts/CartContext";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useState } from "react";
+import { getCart, clearCart } from "@/lib/cart";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
-const Checkout = () => {
-  const navigate = useNavigate();
-  const { cart, total, clearCart } = useCart();
-  const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    address: "",
-    notes: "",
-  });
+interface CartItem {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
+}
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+export default function Checkout() {
+  const [cart, setCart] = useState<{ items: CartItem[] }>({ items: [] });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const handleOrder = async () => {
-    if (!form.name || !form.phone || !form.address) {
-      alert("Te rugăm să completezi toate câmpurile obligatorii!");
-      return;
-    }
+  useEffect(() => {
+    const c = getCart();
+    if (!c.items) c.items = [];
+    setCart(c);
+  }, []);
 
-    try {
-      setLoading(true);
-      const orderNumber = Math.floor(100000 + Math.random() * 900000).toString();
-
-      const { error } = await supabase.from("orders").insert([
-        {
-          order_number: orderNumber,
-          customer_name: form.name,
-          customer_phone: form.phone,
-          address: form.address,
-          notes: form.notes,
-          items: cart.map((item) => ({
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image,
-          })),
-          total,
-          status: "pending",
-        },
-      ]);
-
-      if (error) throw error;
-
+  const handleCheckout = () => {
+    setIsSubmitting(true);
+    setTimeout(() => {
       clearCart();
-      navigate(`/order-confirmation/${orderNumber}`);
-    } catch (err) {
-      console.error("Eroare la trimiterea comenzii:", err);
-      alert("A apărut o eroare la trimiterea comenzii. Încearcă din nou.");
-    } finally {
-      setLoading(false);
-    }
+      setIsSubmitting(false);
+      setOrderPlaced(true);
+    }, 1000);
   };
+
+  if (orderPlaced) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center text-center p-8">
+          <h1 className="text-3xl font-semibold mb-4">Mulțumim pentru comandă!</h1>
+          <p>Comanda ta va fi livrată în 5–7 zile lucrătoare.</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const total = cart.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-[#faf8f3] flex justify-center py-10 px-4">
-      <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-6">
-        {/* Formularul */}
-        <Card className="flex-1 shadow-sm">
-          <CardContent className="p-6 space-y-4">
-            <h1 className="text-2xl font-semibold text-[#2b2b2b] mb-2">Finalizează Comanda</h1>
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="flex-1 max-w-3xl mx-auto p-6">
+        <h1 className="text-3xl font-semibold mb-6 text-center">Finalizare comandă</h1>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">Nume Complet *</label>
-              <Input name="name" value={form.name} onChange={handleChange} placeholder="Nume și prenume" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Telefon *</label>
-              <Input name="phone" value={form.phone} onChange={handleChange} placeholder="07XXXXXXXX" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Adresă Completă *</label>
-              <Textarea name="address" value={form.address} onChange={handleChange} placeholder="Stradă, număr, oraș" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Note (opțional)</label>
-              <Textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Instrucțiuni pentru livrare..." />
-            </div>
-
-            <Button
-              className="w-full bg-[#d8a820] hover:bg-[#c4971c] text-white text-lg py-5 rounded-xl mt-4"
-              onClick={handleOrder}
-              disabled={loading}
-            >
-              {loading ? "Se procesează..." : "Plasează Comanda"}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Rezumat Comandă */}
-        <Card className="w-full lg:w-1/3 shadow-sm">
-          <CardContent className="p-6 space-y-4">
-            <h2 className="text-lg font-semibold">Produse Comandate</h2>
-
-            {cart.map((item, i) => (
-              <div key={i} className="flex items-center gap-4 border-b pb-4">
+        {cart.items.length === 0 ? (
+          <p className="text-center text-gray-500">Coșul tău este gol.</p>
+        ) : (
+          <div className="space-y-4">
+            {cart.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between border-b pb-4"
+              >
                 <img
                   src={item.image}
                   alt={item.name}
-                  className="w-20 h-20 object-contain rounded-md bg-white"
+                  className="w-24 h-24 object-contain rounded-md"
                 />
-                <div className="flex-1">
-                  <p className="font-medium">{item.name}</p>
-                  <p className="text-sm text-gray-600">{item.quantity} x {item.price} RON</p>
+                <div className="flex-1 ml-4">
+                  <h2 className="font-medium">{item.name}</h2>
+                  <p className="text-sm text-gray-600">Cantitate: {item.quantity}</p>
+                </div>
+                <div className="text-right font-semibold">
+                  {(item.price * item.quantity).toFixed(2)} RON
                 </div>
               </div>
             ))}
-
-            <div className="pt-4 border-t">
-              <p className="flex justify-between text-lg font-medium">
-                <span>Total</span> <span>{total.toFixed(2)} RON</span>
-              </p>
-              <p className="text-sm text-gray-500 mt-1">Livrare GRATUITĂ • Termen 5–7 zile lucrătoare</p>
+            <div className="text-right font-semibold text-lg mt-4">
+              Total: {total.toFixed(2)} RON
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <button
+              onClick={handleCheckout}
+              disabled={isSubmitting}
+              className="w-full mt-6 bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition"
+            >
+              {isSubmitting ? "Se procesează comanda..." : "Plasează comanda"}
+            </button>
+          </div>
+        )}
+      </main>
+      <Footer />
     </div>
   );
-};
-
-export default Checkout;
+}
